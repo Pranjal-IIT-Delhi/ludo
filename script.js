@@ -1,94 +1,80 @@
+// Initialize variables
+const canvas = document.getElementById("gameBoard");
+const ctx = canvas.getContext("2d");
+const rollDiceButton = document.getElementById("rollDice");
+const diceResultText = document.getElementById("diceResult");
+const turnIndicator = document.getElementById("turnIndicator");
+
+// Colors for players
+const playerColors = ["red", "yellow", "green", "blue"];
 let currentPlayer = 0;
-let players = [];
-let playerPositions = [];
-let playerTokens = [];
-let diceOutcomes = [1, 2, 3, 4, 5, 6];
-let totalPlayers;
 
-function startGame() {
-    totalPlayers = document.getElementById("players").value;
-    players = ["Magenta", "Sky Blue", "Gold", "Aesthetic Green"].slice(0, totalPlayers);
-    playerPositions = Array(totalPlayers).fill(0);
-    playerTokens = [];
+// Simple board layout
+const boardSize = 600; // 600px canvas size
+const safeZoneSize = 50; // Safe zone size for pieces
 
-    document.getElementById("status").textContent = `Player ${players[currentPlayer]}'s turn!`;
-    document.getElementById("rollButton").disabled = false;
-    generateBoard();
-    createPlayerTokens();
+// Pieces setup
+const pieces = [
+  { x: 100, y: 100, color: playerColors[0], player: 0 },
+  { x: 500, y: 100, color: playerColors[1], player: 1 },
+  { x: 100, y: 500, color: playerColors[2], player: 2 },
+  { x: 500, y: 500, color: playerColors[3], player: 3 },
+];
+
+// Function to draw the board
+function drawBoard() {
+  // Clear the canvas
+  ctx.clearRect(0, 0, boardSize, boardSize);
+
+  // Draw the board grid (simple version)
+  ctx.fillStyle = "#f8f8f8";
+  ctx.fillRect(50, 50, 500, 500); // Outer square
+
+  // Draw the safe zones
+  pieces.forEach(piece => {
+    ctx.beginPath();
+    ctx.arc(piece.x, piece.y, safeZoneSize, 0, Math.PI * 2, false);
+    ctx.fillStyle = piece.color;
+    ctx.fill();
+    ctx.closePath();
+  });
 }
 
-function generateBoard() {
-    let boardContainer = document.getElementById("game-board");
-    boardContainer.innerHTML = '';
-
-    for (let i = 0; i < 36; i++) {
-        let cell = document.createElement("div");
-        cell.setAttribute("id", `cell${i}`);
-        boardContainer.appendChild(cell);
-    }
-}
-
-function createPlayerTokens() {
-    let boardContainer = document.getElementById("game-board");
-
-    // Create a token for each player
-    for (let i = 0; i < totalPlayers; i++) {
-        let token = document.createElement("div");
-        token.classList.add("player-token");
-
-        // Set color for each player token
-        if (i === 0) token.style.backgroundColor = "magenta";
-        else if (i === 1) token.style.backgroundColor = "skyblue";
-        else if (i === 2) token.style.backgroundColor = "gold";
-        else if (i === 3) token.style.backgroundColor = "aestheticgreen";
-
-        playerTokens.push(token);
-        boardContainer.appendChild(token);
-    }
-}
-
+// Function to roll the dice
 function rollDice() {
-    let diceResult = diceOutcomes[Math.floor(Math.random() * diceOutcomes.length)];
-    document.getElementById("dice").textContent = diceResult;
-
-    // Move the player's token
-    playerPositions[currentPlayer] += diceResult;
-
-    // Check for winning condition
-    if (playerPositions[currentPlayer] >= 36) {
-        document.getElementById("status").textContent = `${players[currentPlayer]} wins!`;
-        document.getElementById("rollButton").disabled = true;
-        return;
-    }
-
-    updateBoard();
-    nextTurn();
+  return Math.floor(Math.random() * 6) + 1;
 }
 
-function nextTurn() {
-    currentPlayer = (currentPlayer + 1) % totalPlayers;
-    document.getElementById("status").textContent = `Player ${players[currentPlayer]}'s turn!`;
+// Function to display the dice roll result
+function displayDiceResult(diceValue) {
+  diceResultText.textContent = `Dice: ${diceValue}`;
 }
 
-function updateBoard() {
-    let boardContainer = document.getElementById("game-board");
-
-    // Reset all cells
-    for (let i = 0; i < 36; i++) {
-        document.getElementById(`cell${i}`).style.backgroundColor = "#e0e0e0";
-    }
-
-    // Move the token to the new position
-    let token = playerTokens[currentPlayer];
-    let playerPosition = playerPositions[currentPlayer];
-
-    // Update player token's position on the board
-    let targetCell = document.getElementById(`cell${playerPosition}`);
-    let cellRect = targetCell.getBoundingClientRect();
-
-    token.style.top = `${cellRect.top + 10}px`;
-    token.style.left = `${cellRect.left + 10}px`;
-
-    // Highlight the player's current position
-    targetCell.style.backgroundColor = players[currentPlayer].toLowerCase();
+// Function to update the turn indicator
+function updateTurnIndicator() {
+  turnIndicator.textContent = `Player ${currentPlayer + 1}'s Turn`;
 }
+
+// Function to move pieces
+function movePiece(piece, steps) {
+  // Move logic (simplified)
+  const stepSize = 60; // Adjust as needed
+  piece.x += stepSize * steps; // Move right for example
+
+  // Loop back to the next player after a full rotation
+  currentPlayer = (currentPlayer + 1) % playerColors.length;
+  updateTurnIndicator();
+}
+
+// Event listeners
+rollDiceButton.addEventListener("click", () => {
+  const diceValue = rollDice();
+  displayDiceResult(diceValue);
+
+  // Simulate moving a piece for now (move the first piece as an example)
+  movePiece(pieces[0], diceValue);
+});
+
+// Initial game setup
+drawBoard();
+updateTurnIndicator();
